@@ -1,0 +1,70 @@
+:root {
+  --bg: #3a3d42;
+  --screen: #fafafa;
+  --block: #e7e7e9;
+  --block-strong: #d6d6d9;
+  --fg: #1f2329;
+  --muted: #5f6570;
+  --line: #cfd0d4;
+  --dark: #1f2329;
+  --danger: #b42318;
+  --accent: #1f2329;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--fg); font-family: Poppins, system-ui, -apple-system, Segoe UI, Roboto, sans-serif; }
+.page { max-width: 430px; margin: 0 auto; padding: 16px; display: flex; flex-direction: column; gap: 12px; }
+.phone { background: var(--screen); border-radius: 22px; padding: 18px 16px 24px; display: flex; flex-direction: column; gap: 14px; }
+
+/* Dev-only user switcher (outside the "phone"). */
+.switcher.dev { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #fff; }
+.switcher.dev select { font-size: 14px; padding: 4px 8px; border-radius: 6px; border: none; }
+
+.app-header { display: flex; justify-content: space-between; align-items: center; }
+.logo { font-size: 26px; font-weight: 800; letter-spacing: -0.03em; }
+.menu-button { background: var(--block); color: var(--fg); border: none; }
+
+.company-bar { display: block; background: var(--block); padding: 14px 16px; font-size: 15px; }
+.company-bar select { width: 100%; font: inherit; border: none; background: transparent; color: var(--fg); cursor: pointer; }
+
+/* Card with the "Invoice due" tab overlapping its top edge. */
+.card-block { position: relative; padding-top: 18px; }
+.card-badge-slot { position: absolute; top: 0; left: 0; right: 0; display: flex; justify-content: center; z-index: 1; }
+.invoice-badge { display: inline-flex; align-items: center; gap: 4px; background: var(--block); padding: 8px 14px; font-size: 14px; box-shadow: 0 2px 3px rgba(0, 0, 0, .15); border: none; border-radius: 2px; white-space: nowrap; }
+.invoice-badge .chevron { margin-left: 4px; font-size: 20px; }
+.card-image { position: relative; height: 190px; border-radius: 16px; background: linear-gradient(135deg, #1f2329, #4a5568); color: #fff; display: flex; align-items: center; justify-content: center; }
+.card-image .chevron { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); color: #fff; }
+.card-image-state { font-size: 14px; opacity: .85; }
+
+.section { background: var(--block); padding: 14px 16px; }
+.section h2 { margin: 0 0 10px; font-size: 15px; font-weight: 600; }
+.chevron { font-size: 26px; line-height: 1; color: var(--fg); }
+
+.spend-row { display: flex; align-items: center; justify-content: space-between; }
+.spend-total { margin: 0; font-size: 15px; white-space: nowrap; }
+.spend-total strong { font-size: 20px; }
+.spend-footer { display: flex; justify-content: space-between; margin-top: 8px; gap: 8px; }
+.progress { height: 6px; background: var(--block-strong); border-radius: 999px; margin-top: 10px; overflow: hidden; }
+.progress-fill { height: 100%; background: var(--dark); }
+
+.list { list-style: none; margin: 0 -16px; padding: 0 16px; background: var(--block-strong); }
+.list li { display: flex; justify-content: space-between; gap: 8px; padding: 10px 0; }
+.more-row { width: calc(100% + 32px); margin: 0 -16px -14px; display: flex; justify-content: center; align-items: center; gap: 10px; background: #fff; color: var(--fg); border: 1.5px solid var(--dark); border-radius: 0; padding: 10px 16px; }
+
+.bottom-actions { display: flex; flex-direction: column; gap: 10px; margin-top: 14px; }
+
+.muted { color: var(--muted); font-size: 14px; margin: 0; }
+.error { color: var(--danger); font-size: 14px; }
+.error p { margin: 0 0 8px; }
+.right { text-align: right; }
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+button { font: inherit; font-size: 14px; padding: 8px 14px; border: 1px solid var(--dark); background: #fff; color: var(--fg); cursor: pointer; }
+button.primary { background: var(--dark); color: #fff; }
+button.block { width: 100%; padding: 12px; }
+button:disabled { opacity: .6; cursor: default; }
+input { font: inherit; padding: 10px; border: 1px solid var(--line); }
+
+.badge { display: inline-block; font-size: 12px; padding: 2px 8px; border-radius: 999px; background: #e5e7eb; color: #374151; text-transform: capitalize; }
+.badge-cleared { background: #d1fadf; color: #05603a; }
+.badge-pending { background: #fef0c7; color: #93370d; }
+.badge-declined, .badge-reversed, .badge-refunded { background: #fee4e2; color: #b42318; }
