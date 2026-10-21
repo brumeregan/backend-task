@@ -1,0 +1,224 @@
+
+
+@baseUrl = http://localhost:3000
+
+# Mock tokens of the seeded users
+@annaToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3OTI1MDE3NjAsImlzcyI6InFyZWQtbW9jay1hdXRoIiwic3ViIjoiYTAwMDAwMDAtMDAwMC00MDAwLTgwMDAtMDAwMDAwMDAwMDAxIn0.5pV4Y1_S4la8uWBq_CfS4fCxap_rTjlKXMqCiewOP10
+@erikToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3OTI1MDE3NjAsImlzcyI6InFyZWQtbW9jay1hdXRoIiwic3ViIjoiYTAwMDAwMDAtMDAwMC00MDAwLTgwMDAtMDAwMDAwMDAwMDAyIn0.DDli2ntwA3r2Uintim4cWiR7MxEwGMDexlA4hIG8WIs
+@saraToken = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3OTI1MDE3NjAsImlzcyI6InFyZWQtbW9jay1hdXRoIiwic3ViIjoiYTAwMDAwMDAtMDAwMC00MDAwLTgwMDAtMDAwMDAwMDAwMDAzIn0.JzIuLNDlKHy22KSnU0k7hKo0-ZRONra4LgJPEKTyAWs
+
+# Static seed IDs (applications/b2b-backend/src/db/seed.ts)
+@companyAb = b0000000-0000-4000-8000-000000000001
+@nordicTrade = b0000000-0000-4000-8000-000000000002
+@annaInactiveCard = d0000000-0000-4000-8000-000000000001
+@erikActiveCard = d0000000-0000-4000-8000-000000000002
+@erikFrozenCard = d0000000-0000-4000-8000-000000000003
+@saraActiveCard = d0000000-0000-4000-8000-000000000004
+@companyAbTransaction = f0000000-0000-4000-8000-000000000001
+@companyAbOpenInvoice = e0000000-0000-4000-8000-000000000002
+@nordicTradeOpenInvoice = e0000000-0000-4000-8000-000000000004
+
+
+### Health check
+GET {{baseUrl}}/health
+
+
+### Readiness (also checks the database)
+GET {{baseUrl}}/ready
+
+
+### Current user profile - Not part of UI, but assumption we need it
+GET {{baseUrl}}/v1/user
+Authorization: Bearer {{annaToken}}
+
+# COMPANIES
+### Companies of the current user (Anna has two)
+GET {{baseUrl}}/v1/user/companies
+Authorization: Bearer {{annaToken}}
+
+### Companies of Sara (only Nordic Trade AB)
+GET {{baseUrl}}/v1/user/companies
+Authorization: Bearer {{saraToken}}
+
+
+# Invoices ("Invoice due" badge)
+
+### Badge: the next open invoice (page.totalCount = how many open invoices there are)
+GET {{baseUrl}}/v1/companies/{{companyAb}}/invoices?status=open&limit=1
+Authorization: Bearer {{annaToken}}
+
+### All invoices, page 1 (defaults: page=1, limit=20; sorted by due date, then id)
+GET {{baseUrl}}/v1/companies/{{companyAb}}/invoices
+Authorization: Bearer {{annaToken}}
+
+### Pagination: page 2 with one invoice per page
+GET {{baseUrl}}/v1/companies/{{companyAb}}/invoices?page=2&limit=1
+Authorization: Bearer {{annaToken}}
+
+### Page beyond the end → 200 with empty data
+GET {{baseUrl}}/v1/companies/{{companyAb}}/invoices?page=99&limit=1
+Authorization: Bearer {{annaToken}}
+
+### Invalid page/limit (page=0, limit=101) → 400 with field errors
+GET {{baseUrl}}/v1/companies/{{companyAb}}/invoices?page=0&limit=101
+Authorization: Bearer {{annaToken}}
+
+### One invoice
+GET {{baseUrl}}/v1/invoices/{{companyAbOpenInvoice}}
+Authorization: Bearer {{annaToken}}
+
+
+
+# Cards
+
+### Cards of Company AB
+GET {{baseUrl}}/v1/companies/{{companyAb}}/cards
+Authorization: Bearer {{annaToken}}
+
+### One card
+GET {{baseUrl}}/v1/cards/{{annaInactiveCard}}
+Authorization: Bearer {{annaToken}}
+
+### Activate Anna's card (inactive → active). Changes state.
+POST {{baseUrl}}/v1/cards/{{annaInactiveCard}}/activate
+Authorization: Bearer {{annaToken}}
+
+### Activate again → 409 (already active)
+POST {{baseUrl}}/v1/cards/{{annaInactiveCard}}/activate
+Authorization: Bearer {{annaToken}}
+
+### Freeze Erik's active card (active → frozen). Changes state.
+POST {{baseUrl}}/v1/cards/{{erikActiveCard}}/freeze
+Authorization: Bearer {{erikToken}}
+
+### Freeze again → 409 (already frozen, no extra audit row)
+POST {{baseUrl}}/v1/cards/{{erikActiveCard}}/freeze
+Authorization: Bearer {{erikToken}}
+
+### Unfreeze (frozen → active). Changes state.
+POST {{baseUrl}}/v1/cards/{{erikActiveCard}}/unfreeze
+Authorization: Bearer {{erikToken}}
+
+### Unfreeze Erik's second (frozen) card. Changes state.
+POST {{baseUrl}}/v1/cards/{{erikFrozenCard}}/unfreeze
+Authorization: Bearer {{erikToken}}
+
+
+############################################################
+# Spend limits ("Remaining spend ... based on your set limit")
+############################################################
+
+### Card with its own limit (source: card)
+GET {{baseUrl}}/v1/cards/{{annaInactiveCard}}/spend-limit
+Authorization: Bearer {{annaToken}}
+
+### Card without a limit: falls back to the credit limit (source: credit)
+GET {{baseUrl}}/v1/cards/{{erikActiveCard}}/spend-limit
+Authorization: Bearer {{erikToken}}
+
+### Card under an account-wide limit (source: account)
+GET {{baseUrl}}/v1/cards/{{saraActiveCard}}/spend-limit
+Authorization: Bearer {{saraToken}}
+
+### Set a monthly limit of 8,000.00 SEK (amount in minor units). Changes state.
+PUT {{baseUrl}}/v1/cards/{{erikActiveCard}}/spend-limit
+Authorization: Bearer {{erikToken}}
+Content-Type: application/json
+
+{ "amount": 800000, "period": "monthly" }
+
+### Limit above the credit limit → 422
+PUT {{baseUrl}}/v1/cards/{{erikActiveCard}}/spend-limit
+Authorization: Bearer {{erikToken}}
+Content-Type: application/json
+
+{ "amount": 999999999, "period": "monthly" }
+
+### Invalid body (negative, not an integer, unknown period) → 400 with field errors
+PUT {{baseUrl}}/v1/cards/{{erikActiveCard}}/spend-limit
+Authorization: Bearer {{erikToken}}
+Content-Type: application/json
+
+{ "amount": -10.5, "period": "weekly" }
+
+
+############################################################
+# Transactions
+############################################################
+
+### Latest 3 (what the card view shows); page.totalCount drives "N more items"
+# @name latest
+GET {{baseUrl}}/v1/companies/{{companyAb}}/transactions?limit=3
+Authorization: Bearer {{annaToken}}
+
+### Next page
+GET {{baseUrl}}/v1/companies/{{companyAb}}/transactions?limit=3&page=2
+Authorization: Bearer {{annaToken}}
+
+### Filter by card and status
+GET {{baseUrl}}/v1/companies/{{companyAb}}/transactions?cardId={{erikActiveCard}}&status=cleared&limit=10
+Authorization: Bearer {{erikToken}}
+
+### One transaction
+GET {{baseUrl}}/v1/transactions/{{companyAbTransaction}}
+Authorization: Bearer {{erikToken}}
+
+### limit above 100 → 400
+GET {{baseUrl}}/v1/companies/{{companyAb}}/transactions?limit=500
+Authorization: Bearer {{annaToken}}
+
+### page below 1 → 400
+GET {{baseUrl}}/v1/companies/{{companyAb}}/transactions?page=0
+Authorization: Bearer {{annaToken}}
+
+
+
+
+
+############################################################
+# Tenant isolation: Sara (Nordic Trade AB only) → 404 on Company AB data
+############################################################
+
+### Company AB cards → 404
+GET {{baseUrl}}/v1/companies/{{companyAb}}/cards
+Authorization: Bearer {{saraToken}}
+
+### Anna's card → 404 (not 403: no hint that it exists)
+GET {{baseUrl}}/v1/cards/{{annaInactiveCard}}
+Authorization: Bearer {{saraToken}}
+
+### Freeze Erik's card → 404
+POST {{baseUrl}}/v1/cards/{{erikActiveCard}}/freeze
+Authorization: Bearer {{saraToken}}
+
+### Company AB transaction → 404
+GET {{baseUrl}}/v1/transactions/{{companyAbTransaction}}
+Authorization: Bearer {{saraToken}}
+
+### Company AB invoice → 404
+GET {{baseUrl}}/v1/invoices/{{companyAbOpenInvoice}}
+Authorization: Bearer {{saraToken}}
+
+### Her own invoice works
+GET {{baseUrl}}/v1/invoices/{{nordicTradeOpenInvoice}}
+Authorization: Bearer {{saraToken}}
+
+### Erik is not a member of Nordic Trade → 404
+GET {{baseUrl}}/v1/companies/{{nordicTrade}}/transactions
+Authorization: Bearer {{erikToken}}
+
+
+############################################################
+# Auth and error handling
+############################################################
+
+### No token → 401
+GET {{baseUrl}}/v1/user
+
+### Invalid token → 401
+GET {{baseUrl}}/v1/user
+Authorization: Bearer not-a-real-token
+
+### Malformed UUID → 400
+GET {{baseUrl}}/v1/cards/not-a-uuid
+Authorization: Bearer {{annaToken}}
