@@ -1,0 +1,26 @@
+{
+  "name": "qred-b2b",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@9.12.1",
+  "engines": { "node": ">=22" },
+  "scripts": {
+    "build": "pnpm -r build",
+    "typecheck": "pnpm -r typecheck",
+    "lint": "eslint .",
+    "test": "pnpm -r test",
+    "dev:backend": "pnpm --filter @qred/b2b-app-schemas build && pnpm --filter @qred/b2b-backend dev",
+    "dev:web": "pnpm --filter @qred/b2b-app-schemas build && pnpm --filter @qred/b2b-web dev",
+    "db:migrate": "pnpm --filter @qred/b2b-app-schemas build && pnpm --filter @qred/b2b-backend db:migrate",
+    "db:seed": "pnpm --filter @qred/b2b-app-schemas build && pnpm --filter @qred/b2b-backend db:seed",
+    "db:reset": "pnpm --filter @qred/b2b-app-schemas build && pnpm --filter @qred/b2b-backend db:reset"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.0",
+    "@types/node": "^22.20.0",
+    "eslint": "^9.39.0",
+    "globals": "^16.0.0",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.72.0"
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "name": "@qred/b2b-app-schemas",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Shared API contract: Zod schemas and inferred types.",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "tsup": "^8.5.1",
+    "vitest": "^3.2.4"
+  }
+}

@@ -1,0 +1,20 @@
+node_modules/
+dist/
+.next/
+*.tsbuildinfo
+
+# Env variables and secrets
+.env
+.env.local
+
+# Test data
+data/
+
+# Test coverage
+coverage/
+
+# MacOS system files
+.DS_Store
+
+# AI tools
+.claude/

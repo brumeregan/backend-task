@@ -1,0 +1,80 @@
+# Local runtime: postgres + migrations/seed + backend + web.
+#   docker compose up --build                            everything, migrated and seeded
+#   docker compose up -d postgres                        only the DB, for `pnpm dev:backend` on the host
+#   docker compose run --rm migrate node dist/cli.js reset   one-off DB task (migrate | migrate:down | seed | reset)
+#   docker compose down -v                               stop and wipe the DB volume
+name: qred-b2b
+
+# Local-only credentials, never used outside this file.
+x-db-env: &db-env
+  DB_HOST: postgres
+  DB_PORT: "5432"
+  DB_NAME: qred_b2b
+  DB_USERNAME: qred
+  DB_PASSWORD: qred
+
+x-backend-env: &backend-env
+  <<: *db-env
+  LOG_LEVEL: info
+  # The seeded users' mock tokens are signed with the dev JWT secret, which getConfig()
+  # rejects when NODE_ENV=production (the image default).
+  NODE_ENV: development
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: qred_b2b
+      POSTGRES_USER: qred
+      POSTGRES_PASSWORD: qred
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U qred -d qred_b2b"]
+      interval: 2s
+      timeout: 3s
+      retries: 20
+
+  # Runs to completion before the backend starts. Seeding is a no-op once data exists.
+  migrate:
+    image: qred/b2b-backend:local
+    build:
+      context: .
+      dockerfile: applications/b2b-backend/Dockerfile
+    command: ["node", "dist/cli.js", "migrate", "seed"]
+    environment: *backend-env
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+
+  backend:
+    image: qred/b2b-backend:local
+    environment:
+      <<: *backend-env
+      PORT: "3000"
+      CORS_ORIGIN: http://localhost:3001
+    ports:
+      - "3000:3000"
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+
+  web:
+    image: qred/b2b-web:local
+    build:
+      context: .
+      dockerfile: applications/b2b-web/Dockerfile
+      args:
+        # Called from the browser, so it is the host-mapped backend port.
+        NEXT_PUBLIC_API_BASE_URL: http://localhost:3000
+    ports:
+      - "3001:3001"
+    depends_on:
+      backend:
+        condition: service_healthy
+
+volumes:
+  pgdata:
